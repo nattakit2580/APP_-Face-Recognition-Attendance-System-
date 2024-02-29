@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Image</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            background-image: linear-gradient(135deg, #f5b841, #84dcc6);
+            background-size: cover;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        form, button {
+            margin-bottom: 20px;
+        }
+        #cameraForm {
+            display: none;
+        }
+        video, canvas {
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        #result {
+            display: none;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        #result h2 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        #result p {
+            margin-bottom: 5px;
+            color: #666;
+        }
+        .button-container {
+            display: flex;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            font-size: 16px;
+            margin: 4px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:active {
+            background-color: #3e8e41;
+            transform: translateY(2px);
+            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+        }
+        .in-button {
+            background-color: RoyalBlue;
+        }
+        .out-button {
+            background-color: DarkGoldenrod;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Image</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" id="file">
+        <button type="submit">Upload</button>
+    </form>
+    <button onclick="openCamera()">Open Camera</button>
+    <form id="cameraForm">
+        <video id="video" width="640" height="480" autoplay></video>
+        <button type="button" onclick="capture()">Capture</button>
+        <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+        <input type="hidden" name="image_data" id="image_data">
+    </form>
+    <div id="result">
+        <h2>Result</h2>
+        <p id="result_text"></p>
+    </div>
+
+    <div class="button-container">
+        <button class="in-button" onclick="submitAction('in')">In</button>
+        <button class="out-button" onclick="submitAction('out1')">Out1</button>
+    </div>
+
+    <script>
+        function openCamera() {
+            var cameraForm = document.getElementById('cameraForm');
+            cameraForm.style.display = 'block';
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    var video = document.getElementById('video');
+                    video.srcObject = stream;
+                })
+                .catch(function(err) {
+                    console.log('Error accessing the camera: ', err);
+                });
+        }
+
+        function submitAction(action) {
+            document.getElementById('image_data').value = action;
+            document.getElementById('file').disabled = true;
+            var formData = new FormData();
+            formData.append('file', action);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.name !== undefined && data.similarity !== undefined && data.data !== undefined) {
+                    var resultText = document.getElementById('result_text');
+                    resultText.textContent = `Name: ${data.name}, Similarity: ${data.similarity}, Data: ${JSON.stringify(data.data)}`;
+                    document.getElementById('result').style.display = 'block';
+                } else {
+                    console.error('Invalid data received from server:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function capture() {
+            var video = document.getElementById('video');
+            var canvas = document.getElementById('canvas');
+            var context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            var imageData = canvas.toDataURL('image/jpeg');
+            document.getElementById('image_data').value = imageData;
+
+            fetch('/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image_data: imageData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.name !== undefined && data.similarity !== undefined && data.data !== undefined) {
+                    var resultText = document.getElementById('result_text');
+                    resultText.textContent = `Name: ${data.name}, Similarity: ${data.similarity}, Data: ${JSON.stringify(data.data)}`;
+                    document.getElementById('result').style.display = 'block';
+                } else {
+                    console.error('Invalid data received from server:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+            var stream = video.srcObject;
+            var tracks = stream.getTracks();
+            tracks.forEach(function(track) {
+                track.stop();
+            });
+
+            video.srcObject = null;
+            var cameraForm = document.getElementById('cameraForm');
+            cameraForm.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

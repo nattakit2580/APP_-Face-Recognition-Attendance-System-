@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            background-image: linear-gradient(135deg, #f5b841, #84dcc6);
+            background-size: cover;
+        }
+        .result-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
+        }
+        .result-text {
+            text-align: left;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        p {
+            margin-bottom: 10px;
+            color: #666;
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+            margin-top: 20px;
+            padding: 8px 16px;
+            border-radius: 5px;
+            background-color: #fff;
+            transition: background-color 0.3s ease;
+        }
+        a:hover {
+            background-color: #e0e0e0;
+        }
+        /* เพิ่มส่วนนี้เพื่อกำหนดขนาดรูปภาพ */
+        img {
+            max-width: 100%; /* ทำให้รูปภาพไม่เกินขอบเขตของพื้นที่ที่กำหนด */
+            height: auto; /* ปรับความสูงของรูปภาพโดยอัตโนมัติ */
+        }
+    </style>
+</head>
+<body>
+    <div class="result-container">
+        <img src="{{ crop_path }}" alt="Uploaded Image" style="max-width: 100%; max-height: 100px;">
+ 
+        <div class="result-text">
+            <h2>Result</h2>
+            <p>Name: {{ name }}</p>
+            <p>Similarity: {{ similarity|round(2) }}</p>
+            <p>Position: {{ data['Position'] }}</p>
+            <p>Time: {{ time }}</p>
+            {% if data %}
+            {% else %}
+            <p>No matching employee found.</p>
+            {% endif %}
+            <a href="/">Back to Upload</a>
+        </div>
+    </div>
+</body>
+
+</html>
